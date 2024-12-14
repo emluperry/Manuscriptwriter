@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Search;
 
-namespace MSW.Scripting.Unity
+using MSW.Compiler;
+namespace MSW.Unity
 {
     public class Storyteller : MonoBehaviour
     {
@@ -31,7 +33,7 @@ namespace MSW.Scripting.Unity
         [SearchContext("ext:txt dir:Resources")] // QOL: Limit the files to ONLY project text files within Resources. 
         private TextAsset testScript;
 
-        private MSWRunner runner;
+        private Compiler.Compiler compiler;
 
         private void Start()
         {
@@ -40,8 +42,12 @@ namespace MSW.Scripting.Unity
                 return;
             }
 
-            runner = new MSWRunner() { ErrorLogger = this.LogError };
-            runner.Run(testScript.text);
+            compiler = new Compiler.Compiler()
+            {
+                ErrorLogger = LogError,
+                FunctionLibrary = new List<object>() { new UnityDialogue() },
+            };
+            compiler.Compile(testScript.text);
         }
 
         private void LogError(string message)

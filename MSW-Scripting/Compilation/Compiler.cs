@@ -6,7 +6,7 @@ namespace MSW.Compiler
 {
     public class Compiler
     {
-        public List<object> FunctionLibrary;
+        public IEnumerable<object> FunctionLibrary;
         public Action<string> ErrorLogger;
         
         private bool hasError = false;

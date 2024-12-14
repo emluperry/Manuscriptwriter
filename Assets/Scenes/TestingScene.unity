@@ -245,6 +245,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 920ff383611e9cf4cbaec68b91267871, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  libraries:
+  - {fileID: 11400000, guid: 0311bfa2ac35d0648accdcefa929da3d, type: 2}
   testScript: {fileID: 4900000, guid: 064b2cc303591f444b81e06b14bdf8f3, type: 3}
 --- !u!4 &840270403
 Transform:

@@ -26,12 +26,12 @@ namespace MSW.Compiler
         public Action<Token, string> ReportTokenError;
         
         private List<Token> tokens;
-        private readonly IReadOnlyList<object> functionLibraries;
+        private readonly IEnumerable<object> functionLibraries;
         private readonly List<CustomFunction> functions;
 
         private int currentIndex = 0;
 
-        public Parser(List<Token> tokens, List<object> functionLibrary = null)
+        public Parser(List<Token> tokens, IEnumerable<object> functionLibrary = null)
         {
             this.tokens = tokens;
             this.functionLibraries = functionLibrary;
@@ -44,7 +44,7 @@ namespace MSW.Compiler
         }
 
         #region LIBRARIES
-        private void SetupLibrary(IReadOnlyList<object> functionLibrary)
+        private void SetupLibrary(IEnumerable<object> functionLibrary)
         {
             foreach (var lib in functionLibrary)
             {

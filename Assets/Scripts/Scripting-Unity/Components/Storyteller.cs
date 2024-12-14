@@ -7,6 +7,8 @@ namespace MSW.Unity
 {
     public class Storyteller : MonoBehaviour
     {
+        [SerializeField] private UnityLibraryScriptableObject[] libraries;
+        private Compiler.Compiler compiler;
         //private void Awake()
         //{
         //    this.RegisterSceneObjects();
@@ -33,8 +35,6 @@ namespace MSW.Unity
         [SearchContext("ext:txt dir:Resources")] // QOL: Limit the files to ONLY project text files within Resources. 
         private TextAsset testScript;
 
-        private Compiler.Compiler compiler;
-
         private void Start()
         {
             if(!testScript)
@@ -45,7 +45,7 @@ namespace MSW.Unity
             compiler = new Compiler.Compiler()
             {
                 ErrorLogger = LogError,
-                FunctionLibrary = new List<object>() { new UnityDialogue() },
+                FunctionLibrary = libraries,
             };
             compiler.Compile(testScript.text);
         }

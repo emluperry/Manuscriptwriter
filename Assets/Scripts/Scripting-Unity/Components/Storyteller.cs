@@ -7,7 +7,7 @@ namespace MSW.Unity
 {
     public class Storyteller : MonoBehaviour
     {
-        [SerializeField] private UnityLibraryScriptableObject[] libraries;
+        [SerializeField] private MSWUnityLibrary[] libraries;
         private Compiler.Compiler compiler;
         //private void Awake()
         //{

@@ -1,31 +1,45 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using MSW.Reflection;
 using MSW.Scripting.NativeFunctions;
 
 namespace MSW.Scripting
 {
     internal class Interpreter : IMSWExpressionVisitor, IMSWStatementVisitor
     {
+        // Context Settings
+        private RunnerEvent PauseEvent = null;
+        internal bool IsFinished { get; private set; }
+        
+        // Error reporting
         public Action<MSWRuntimeException> ReportRuntimeError;
-
+        
         private Environment globals;
         private Environment environment;
 
-        public Interpreter()
+        private IEnumerator<Statement> statementEnumerator;
+
+        public Interpreter(Manuscript manuscript)
         {
             this.globals = new Environment();
             this.environment = globals;
             
-            globals.Define("RunDialogue", new RunDialogue());
+            this.statementEnumerator = manuscript.statements.GetEnumerator();
         }
 
-        public object Interpret(IEnumerable<Statement> statements)
+        ~Interpreter()
+        {
+            this.statementEnumerator.Dispose();
+        }
+
+        public object InterpretAll()
         {
             try
             {
-                foreach (Statement s in statements)
+                while (this.statementEnumerator.MoveNext())
                 {
-                    this.Execute(s);
+                    this.Execute(this.statementEnumerator.Current);
                 }
             }
             catch(MSWRuntimeException e)
@@ -36,14 +50,52 @@ namespace MSW.Scripting
             return "Failed to run interpretation.";
         }
 
+        public bool InterpretNextLine()
+        {
+            try
+            {
+                if (this.statementEnumerator.MoveNext())
+                {
+                    this.Execute(this.statementEnumerator.Current);
+                    return this.PauseEvent == null;
+                }
+                else
+                {
+                    this.IsFinished = true;
+                    return false;
+                }
+            }
+            catch (MSWRuntimeException e)
+            {
+                ReportRuntimeError?.Invoke(e);
+            }
+
+            return false;
+        }
+
+        private void HandleContext(Context context)
+        {
+            if (context.pauseEvent != null)
+            {
+                this.PauseEvent = context.pauseEvent;
+                this.PauseEvent.RegisterEvent(HandlePauseEvent);
+            }
+        }
+
+        private void HandlePauseEvent()
+        {
+            this.PauseEvent?.UnregisterEvent(HandlePauseEvent);
+            this.PauseEvent = null;
+        }
+
         private object Evaluate(Expression expr)
         {
             return expr.Accept(this);
         }
 
-        private void Execute(Statement statement)
+        private object Execute(Statement statement)
         {
-            statement.Accept(this);
+            return statement.Accept(this);
         }
 
         private void ExecuteBlock(IEnumerable<Statement> statements, Environment blockEnvironment)
@@ -232,13 +284,21 @@ namespace MSW.Scripting
 
         public object VisitCall(Call visitor)
         {
-            object[] arguments = new object[visitor.arguments.Count];
-            for (int i = 0; i < visitor.arguments.Count; i++)
+            object[] arguments = new object[visitor.arguments.Count + 1];
+
+            Context ctx = new Context();
+            arguments[0] = ctx;
+            for (int i = 0; i < visitor.arguments.Count(); i++)
             {
-                arguments[i] = this.Evaluate(visitor.arguments[i]);
+                arguments[i + 1] = this.Evaluate(visitor.arguments[i]);
             }
 
-            return visitor.function?.DynamicInvoke(visitor.target, arguments);
+            object output = visitor.function?.DynamicInvoke(visitor.target, arguments);
+            
+            // Handle Context
+            this.HandleContext(ctx);
+
+            return output;
         }
 
         #endregion

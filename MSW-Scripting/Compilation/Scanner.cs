@@ -78,7 +78,6 @@ namespace MSW.Compiler
                 {
                     // Get the full line as a token and return.
                     tokens.Add(this.ConvertLineToToken());
-                    line++;
                     return tokens;
                 }
                 

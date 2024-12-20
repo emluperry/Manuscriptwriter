@@ -13,7 +13,7 @@ namespace MSW.Compiler
         private Scanner scanner;
         private Parser parser;
 
-        public void Compile(string source)
+        public Manuscript Compile(string source)
         {
             hasError = false;
             scanner = new Scanner(source);
@@ -25,11 +25,11 @@ namespace MSW.Compiler
 
             if(hasError)
             {
-                return;
+                return null;
             }
 
-            Interpreter interpreter = new Interpreter() { ReportRuntimeError = ReportRuntimeError };
-            interpreter.Interpret(statements);
+            Manuscript script = new Manuscript(statements);
+            return script;
         }
         
         private void ReportTokenError(Token token, string message)

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Search;
@@ -30,10 +31,12 @@ namespace MSW.Unity
             
         //}
 
-        // DEBUG ONLY !!!
+        // DEBUG !!!
         [SerializeField]
         [SearchContext("ext:txt dir:Resources")] // QOL: Limit the files to ONLY project text files within Resources. 
         private TextAsset testScript;
+
+        private Runner runner;
 
         private void Start()
         {
@@ -44,13 +47,27 @@ namespace MSW.Unity
 
             compiler = new Compiler.Compiler()
             {
-                ErrorLogger = LogError,
+                ErrorLogger = Logger,
                 FunctionLibrary = libraries,
             };
-            compiler.Compile(testScript.text);
+            var script = compiler.Compile(testScript.text);
+
+            runner = new Runner(script)
+            {
+                Logger = Logger,
+            };
+            
+            runner.RunUntilBreak();
         }
 
-        private void LogError(string message)
+        private IEnumerator c_HandleWait()
+        {
+            yield return null;
+            
+            runner.RunUntilBreak();
+        }
+
+        private void Logger(string message)
         {
             Debug.LogError(message); 
         }

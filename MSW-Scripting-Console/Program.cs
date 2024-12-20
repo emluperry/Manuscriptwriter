@@ -43,8 +43,6 @@ namespace MSW.Console
             {
                 System.Console.ReadLine();
                 dialogue.consoleEvent.FireEvent();
-                
-                runner.RunUntilBreak();
             }
         }
     }

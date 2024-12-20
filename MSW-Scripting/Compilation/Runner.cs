@@ -23,11 +23,7 @@ namespace MSW.Compiler
 
         public void RunUntilBreak()
         {
-            bool runNext = true;
-            while (runNext)
-            {
-                runNext = interpreter.InterpretNextLine();
-            }
+            interpreter.InterpretUntilBreak();
         }
 
         private void ReportRuntimeError(MSWRuntimeException ex)

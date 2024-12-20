@@ -1,11 +1,9 @@
 {
-    "name": "MSW-Unity-Dialogue",
-    "rootNamespace": "MSW.Unity.Dialogue",
+    "name": "Demo-UI",
+    "rootNamespace": "Demo.UI",
     "references": [
-        "GUID:9dfc29c3bbd2ee844a9ccd296fc26188",
-        "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:883789f1c68973c4e95b13f66521fb2c",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:326274b07fa14534788730b6572c5be5"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -50,8 +50,22 @@ namespace MSW.Scripting
             return "Failed to run interpretation.";
         }
 
+        public void InterpretUntilBreak()
+        {
+            bool runNext = true;
+            while (runNext)
+            {
+                runNext = this.InterpretNextLine();
+            }
+        }
+
         public bool InterpretNextLine()
         {
+            if (this.PauseEvent != null)
+            {
+                return false;
+            }
+            
             try
             {
                 if (this.statementEnumerator.MoveNext())
@@ -86,6 +100,8 @@ namespace MSW.Scripting
         {
             this.PauseEvent?.UnregisterEvent(HandlePauseEvent);
             this.PauseEvent = null;
+            
+            this.InterpretUntilBreak();
         }
 
         private object Evaluate(Expression expr)

@@ -10,7 +10,9 @@ namespace MSW.Scripting
     {
         // Context Settings
         private RunnerEvent PauseEvent = null;
+        
         internal bool IsFinished { get; private set; }
+        internal Action OnFinish;
         
         // Error reporting
         public Action<MSWRuntimeException> ReportRuntimeError;
@@ -50,7 +52,7 @@ namespace MSW.Scripting
             return "Failed to run interpretation.";
         }
 
-        public void InterpretUntilBreak()
+        public void RunUntilBreak()
         {
             bool runNext = true;
             while (runNext)
@@ -76,6 +78,7 @@ namespace MSW.Scripting
                 else
                 {
                     this.IsFinished = true;
+                    this.OnFinish?.Invoke();
                     return false;
                 }
             }
@@ -101,7 +104,7 @@ namespace MSW.Scripting
             this.PauseEvent?.UnregisterEvent(HandlePauseEvent);
             this.PauseEvent = null;
             
-            this.InterpretUntilBreak();
+            this.RunUntilBreak();
         }
 
         private object Evaluate(Expression expr)

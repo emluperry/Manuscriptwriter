@@ -35,9 +35,9 @@ namespace MSW.Console
             };
 
             Manuscript script = comp.Compile(data);
-            
-            var runner = new Runner(script);
-            runner.RunUntilBreak();
+
+            var runner = new Runner(script) { Logger = LogError, OnFinish = () => { System.Console.WriteLine("Script finished."); } };
+            runner.Run();
             
             while (!runner.IsFinished())
             {

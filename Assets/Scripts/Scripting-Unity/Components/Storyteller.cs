@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Search;
 
@@ -55,21 +53,23 @@ namespace MSW.Unity
             runner = new Runner(script)
             {
                 Logger = Logger,
+                OnFinish = CleanupOnFinish,
             };
             
-            runner.RunUntilBreak();
-        }
-
-        private IEnumerator c_HandleWait()
-        {
-            yield return null;
-            
-            runner.RunUntilBreak();
+            runner.Run();
         }
 
         private void Logger(string message)
         {
             Debug.LogError(message); 
+        }
+
+        private void CleanupOnFinish()
+        {
+            foreach (var library in this.libraries)
+            {
+                library.Cleanup();
+            }
         }
     }
 }

@@ -7,13 +7,14 @@ namespace MSW.Compiler
     public class Runner
     {
         public Action<string> Logger;
+        public Action OnFinish;
         
         private Manuscript manuscript;
         private Interpreter interpreter;
         public Runner(Manuscript manuscript)
         {
             this.manuscript = manuscript;
-            interpreter = new Interpreter(manuscript) { ReportRuntimeError = ReportRuntimeError };
+            interpreter = new Interpreter(manuscript) { ReportRuntimeError = ReportRuntimeError, OnFinish = RunOnFinish};
         }
 
         public bool IsFinished()
@@ -21,9 +22,14 @@ namespace MSW.Compiler
             return interpreter.IsFinished;
         }
 
-        public void RunUntilBreak()
+        public void Run()
         {
-            interpreter.InterpretUntilBreak();
+            interpreter.RunUntilBreak();
+        }
+
+        private void RunOnFinish()
+        {
+            this.OnFinish?.Invoke();
         }
 
         private void ReportRuntimeError(MSWRuntimeException ex)

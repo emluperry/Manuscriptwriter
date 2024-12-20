@@ -24,6 +24,8 @@ namespace MSW.Unity.Dialogue
         [MSWFunction("{0}: {1}")]
         public object RunDialogue(Context context, string speaker, string line)
         {
+            this.gameObject.SetActive(true);
+            
             this.speaker.text = speaker;
             this.dialogue.text = line;
             
@@ -58,5 +60,10 @@ namespace MSW.Unity.Dialogue
         }
 
         #endregion
+
+        public override void Cleanup()
+        {
+            this.gameObject.SetActive(false);
+        }
     }
 }

@@ -18,13 +18,13 @@ namespace MSW.Unity.Dialogue
 
         private void Start()
         {
-            this.canvas = this.GetComponent<Canvas>();
+            this.canvas = this.GetComponentInChildren<Canvas>(true);
         }
 
         [MSWFunction("{0}: {1}")]
         public object RunDialogue(Context context, string speaker, string line)
         {
-            this.gameObject.SetActive(true);
+            canvas.gameObject.SetActive(true);
             
             this.speaker.text = speaker;
             this.dialogue.text = line;
@@ -63,7 +63,7 @@ namespace MSW.Unity.Dialogue
 
         public override void Cleanup()
         {
-            this.gameObject.SetActive(false);
+            canvas.gameObject.SetActive(false);
         }
     }
 }

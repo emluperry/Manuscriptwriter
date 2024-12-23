@@ -15,3 +15,9 @@ Adam: Hello 2!
 
 var strValue = "hello world! This is a test."
 print strValue
+
+
+
+When the player speaks with me
+# Say "HELLO????????"
+Matt: Exterminate!

@@ -22,20 +22,32 @@ namespace MSW.Compiler
                 this.instance = instance;
             }
         }
+
+        private struct CustomEvent
+        {
+            public MSWEventAttribute attribute;
+            public RunnerEvent runnerEvent;
+
+            public CustomEvent(MSWEventAttribute attribute, RunnerEvent runnerEvent)
+            {
+                this.attribute = attribute;
+                this.runnerEvent = runnerEvent;
+            }
+        }
         
         public Action<Token, string> ReportTokenError;
         
         private List<Token> tokens;
-        private readonly IEnumerable<object> functionLibraries;
         private readonly List<CustomFunction> functions;
+        private readonly List<CustomEvent> events;
 
         private int currentIndex = 0;
 
         public Parser(List<Token> tokens, IEnumerable<object> functionLibrary = null)
         {
             this.tokens = tokens;
-            this.functionLibraries = functionLibrary;
             this.functions = new List<CustomFunction>();
+            this.events = new List<CustomEvent>();
 
             if (functionLibrary != null)
             {
@@ -48,7 +60,8 @@ namespace MSW.Compiler
         {
             foreach (var lib in functionLibrary)
             {
-                var usableMethods = lib.GetType().GetMethods()
+                var libraryType = lib.GetType();
+                var usableMethods = libraryType.GetMethods()
                     .Where(method => method.GetCustomAttributes<MSWFunctionAttribute>().Any());
 
                 foreach (MethodInfo method in usableMethods)
@@ -57,6 +70,25 @@ namespace MSW.Compiler
                     foreach (var attr in attributes)
                     {
                         this.functions.Add(new CustomFunction(attr, method, lib));
+                    }
+                }
+                
+                var usableEvents = libraryType.GetFields()
+                    .Where(method => method.GetCustomAttributes<MSWEventAttribute>().Any());
+                
+                foreach (FieldInfo method in usableEvents)
+                {
+                    var attributes = method.GetCustomAttributes<MSWEventAttribute>();
+                    var field = method.GetValue(lib);
+
+                    if (!(field is RunnerEvent runnerEvent))
+                    {
+                        continue;
+                    }
+                    
+                    foreach (var attr in attributes)
+                    {
+                        this.events.Add(new CustomEvent(attr, runnerEvent));
                     }
                 }
             }
@@ -77,6 +109,23 @@ namespace MSW.Compiler
             }
 
             target = null;
+            inputs = null;
+            return null;
+        }
+    
+        private RunnerEvent GetEventFromLine(string line, out List<string> inputs)
+        {
+            foreach (var runnerEvent in this.events)
+            {
+                if (!runnerEvent.attribute.MatchesSyntax(line))
+                {
+                    continue;
+                }
+                
+                inputs = runnerEvent.attribute.GetInputs(line);
+                return runnerEvent.runnerEvent;
+            }
+
             inputs = null;
             return null;
         }
@@ -265,11 +314,11 @@ namespace MSW.Compiler
 
         private Statement Statement()
         {
-            if (this.TryConsumeToken(TokenType.FOR, out Token forToken))
+            if (this.TryConsumeToken(TokenType.WHEN, out Token whenToken))
             {
-                return this.ForStatement();
+                return this.WhenStatement();
             }
-
+            
             if (this.TryConsumeToken(TokenType.IF, out Token ifToken))
             {
                 return this.IfStatement();
@@ -278,6 +327,11 @@ namespace MSW.Compiler
             if(this.TryConsumeToken(TokenType.WHILE, out Token whileToken))
             {
                 return this.WhileStatement();
+            }
+            
+            if (this.TryConsumeToken(TokenType.FOR, out Token forToken))
+            {
+                return this.ForStatement();
             }
             
             if (this.TryConsumeToken(TokenType.PRINT, out Token printToken))
@@ -293,6 +347,32 @@ namespace MSW.Compiler
             Expression value = this.Expression();
             this.ConsumeOneOfTokens(new List<TokenType> { TokenType.COMMA, TokenType.EOL, TokenType.EOF }, "Expect end of line after value.");
             return new StatementExpression(value);
+        }
+        
+        private Statement WhenStatement()
+        {
+            if (!this.TryConsumeToken(TokenType.EVENT, out Token eventToken))
+            {
+                throw this.ParseError(eventToken, "When must be followed by an event!");
+            }
+            
+            RunnerEvent runnerEvent = this.GetEventFromLine(eventToken.lexeme, out List<string> arguments);
+
+            if (runnerEvent == null)
+            {
+                throw this.ParseError(eventToken, "Could not find that event! Check spelling.");
+            }
+
+            List<Expression> args = new List<Expression>();
+            // convert inputs into expressions
+            foreach (var arg in arguments)
+            {
+                args.Add(this.ConvertStringArgumentToToken(arg));
+            }
+            
+            var body = new Block(this.Block());
+
+            return new When(runnerEvent, body, args);
         }
 
         private Statement IfStatement()
@@ -365,6 +445,23 @@ namespace MSW.Compiler
             Expression value = this.Expression();
             this.ConsumeOneOfTokens(new List<TokenType> { TokenType.EOL, TokenType.EOF }, "Expect end of line after value.");
             return new Print(value);
+        }
+        
+        private List<Statement> Block() {
+            List<Statement> statements = new List<Statement>();
+
+            while (!this.IsEndOfQueue() && !this.CurrentMatchesOneOfTypes(new List<TokenType> { TokenType.EOF, TokenType.WHEN, TokenType.PASSAGE}))
+            {
+                if (this.TryConsumeToken(TokenType.EOL, out Token eolToken))
+                {
+                    continue;
+                }
+                
+                statements.Add(this.Declaration());
+            }
+            
+            this.ConsumeOneOfTokens(new List<TokenType> { TokenType.EOL, TokenType.EOF, TokenType.WHEN, TokenType.PASSAGE }, "Expect end of line after value.");
+            return statements;
         }
 
         #endregion
@@ -505,15 +602,6 @@ namespace MSW.Compiler
                 // return new call with expressions
                 return new Call(function, func, target, args);
             }
-            
-            // // How are we going to pull functions from external "libraries"?
-            // if (this.TryConsumeToken(TokenType.COLON, out Token op))
-            // {
-            //      // Dialogue
-            //      Expression dialogue = this.Primary();
-            //      
-            //      return new Call("RunDialogue", op, new List<Expression>() { expression, dialogue });
-            // }
             
             return this.Primary();
         }

@@ -28,12 +28,14 @@ namespace MSW.Scripting
         IF, ELSE,
         WHILE, FOR,
         
-        // Event definition
-        GIVEN, WHEN,
+        // Passage definition
+        PASSAGE, WHEN,
+        FUNCTION, EVENT,
+        GIVEN,
         
-        // Functions
-        PRINT,
+        // Baked functions
+        PRINT, // Prints to console.
         
-        EOF, EOL, FUNCTION, UNIDENTIFIED, ERROR
+        EOF, EOL, UNIDENTIFIED, ERROR
     }
 }

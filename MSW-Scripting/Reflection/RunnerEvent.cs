@@ -4,21 +4,30 @@ namespace MSW.Reflection
 {
     public class RunnerEvent
     {
-        private Action runtimeEvent;
+        private EventHandler<RunnerEventArgs> runtimeEvent;
 
-        public void FireEvent()
+        public virtual void FireEvent(RunnerEventArgs args)
         {
-            runtimeEvent?.Invoke();
+            runtimeEvent?.Invoke(this, args);
         }
 
-        public void RegisterEvent(Action e)
+        public virtual void RegisterEvent(EventHandler<RunnerEventArgs> e)
         {
             runtimeEvent += e;
         }
 
-        public void UnregisterEvent(Action e)
+        public virtual void UnregisterEvent(EventHandler<RunnerEventArgs> e)
         {
             runtimeEvent -= e;
+        }
+
+        public virtual void ClearAllEvents()
+        {
+            var invokes = this.runtimeEvent.GetInvocationList();
+            foreach (var invoke in invokes)
+            {
+                this.runtimeEvent -= (EventHandler<RunnerEventArgs>)invoke;
+            }
         }
     }
 }

@@ -36,10 +36,11 @@ namespace MSW.Compiler
             while (!this.IsFinished())
             {
                 tokens.AddRange(this.ScanLine());
-                tokens.Add(new Token(TokenType.EOL, null, null, this.line));
+                tokens.Add(new Token(TokenType.EOL, null, null, this.line + 1));
                 line++;
             }
 
+            tokens.Add(new Token(TokenType.EOF, null, null, this.line + 1));
             return tokens;
         }
         
@@ -61,51 +62,75 @@ namespace MSW.Compiler
             // Check first token.
             Token previousToken = ErrorToken("Previous token does not exist.");
             Token currentToken = this.ScanToken(previousToken);
-            if (currentToken.type == TokenType.UNIDENTIFIED)
-            {
-                // Get the full line as a token and return.
-                tokens.Add(this.ConvertLineToToken());
-                return tokens;
-            }
-            else if (currentToken.type == TokenType.IDENTIFIER)
-            {
-                // check for = token. If it doesn't exist, this isn't an assignment, so no point keeping it standalone.
-                previousToken = currentToken;
-                this.SkipWhitespace();
-                currentToken = this.ScanToken(previousToken);
 
-                if (currentToken.type != TokenType.EQUAL)
-                {
-                    // Get the full line as a token and return.
-                    tokens.Add(this.ConvertLineToToken());
+            switch (currentToken.type)
+            {
+                case TokenType.UNIDENTIFIED: // Get the full line as a function and return.
+                    tokens.Add(this.ConvertLineToToken(TokenType.FUNCTION));
                     return tokens;
-                }
                 
-                tokens.Add(previousToken);
+                case TokenType.WHEN: // Get the remainder of the line as a token and return.
+                    tokens.Add(currentToken);
+                    
+                    this.SkipWhitespace();
+                    if (this.EndOfLine())
+                    {
+                        break;
+                    }
+                    tokens.Add(this.ConvertLineToToken(TokenType.EVENT, currentIndex));
+                    return tokens;
+                
+                case TokenType.IDENTIFIER: // check for = token. If it doesn't exist, this isn't an assignment, so no point keeping it standalone.
+                    previousToken = currentToken;
+                    this.SkipWhitespace();
+                    currentToken = this.ScanToken(previousToken);
+
+                    if (currentToken.type != TokenType.EQUAL)
+                    {
+                        // Get the full line as a token and return.
+                        tokens.Add(this.ConvertLineToToken(TokenType.FUNCTION));
+                        return tokens;
+                    }
+                
+                    tokens.Add(previousToken);
+                    break;
             }
             
             tokens.Add(currentToken);
             while (!this.EndOfLine())
             {
-                this.SkipWhitespace();
-                if (this.EndOfLine())
-                {
-                    break;
-                }
-                
-                previousToken = currentToken;
-                startIndex = currentIndex;
-                currentToken = this.ScanToken(previousToken);
+                var tempToken = this.ScanNextToken(ref previousToken, currentToken);
 
-                if (currentToken.type == TokenType.IDENTIFIER)
+                if (tempToken == null)
                 {
-                    this.identifiers[currentToken.lexeme] = currentToken;
+                    continue;
                 }
-                
+
+                currentToken = tempToken;
                 tokens.Add(currentToken);
             }
             
             return tokens;
+        }
+
+        private Token ScanNextToken(ref Token previousToken, Token currentToken)
+        {
+            this.SkipWhitespace();
+            if (this.EndOfLine())
+            {
+                return null;
+            }
+            
+            previousToken = currentToken;
+            startIndex = currentIndex;
+            var nextToken = this.ScanToken(previousToken);
+            
+            if (nextToken.type == TokenType.IDENTIFIER)
+            {
+                this.identifiers[nextToken.lexeme] = nextToken;
+            }
+            
+            return nextToken;
         }
 
         #region SCANNING
@@ -182,9 +207,14 @@ namespace MSW.Compiler
             return this.ErrorToken("Unexpected character.");
         }
 
-        private Token ConvertLineToToken()
+        private Token ConvertLineToToken(TokenType type, int start = -1)
         {
-            return new Token(TokenType.FUNCTION, currentLine.Substring(startIndex, endIndex - 1 - startIndex), null, line + 1);
+            if (start == -1)
+            {
+                start = startIndex;
+            }
+            
+            return new Token(type, currentLine.Substring(start, endIndex - 1 - start), null, line + 1);
         }
 
         private Token MakeToken(TokenType type, object literal = null)
@@ -288,7 +318,7 @@ namespace MSW.Compiler
                             break;
                         switch (identifier[2])
                         {
-                            case 'e': return CheckKeyword(3, 2, "le", TokenType.WHEN);
+                            case 'e': return CheckKeyword(3, 1, "n", TokenType.WHEN);
                             case 'i': return CheckKeyword(3, 2, "le", TokenType.WHILE);
                         }
                     }

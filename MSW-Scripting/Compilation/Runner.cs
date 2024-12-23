@@ -32,6 +32,11 @@ namespace MSW.Compiler
             this.OnFinish?.Invoke();
         }
 
+        public void RunCleanup()
+        {
+            this.interpreter.RunScriptCleanup();
+        }
+
         private void ReportRuntimeError(MSWRuntimeException ex)
         {
             this.Report(ex.operatorToken.line, "", ex.Message);

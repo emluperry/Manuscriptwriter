@@ -21,6 +21,7 @@ namespace MSW.Scripting
         private Environment environment;
 
         private IEnumerator<Statement> statementEnumerator;
+        private List<RunnerEvent> activeEvents = new List<RunnerEvent>();
 
         public Interpreter(Manuscript manuscript)
         {
@@ -28,28 +29,74 @@ namespace MSW.Scripting
             this.environment = globals;
             
             this.statementEnumerator = manuscript.statements.GetEnumerator();
+            
+            this.RunScriptSetup();
         }
 
         ~Interpreter()
         {
-            this.statementEnumerator.Dispose();
+            this.RunScriptCleanup();
         }
 
-        public object InterpretAll()
+        private void RunScriptSetup()
         {
-            try
+            while (this.statementEnumerator.MoveNext())
             {
-                while (this.statementEnumerator.MoveNext())
+                if (this.statementEnumerator.Current is When whenStatement)
                 {
-                    this.Execute(this.statementEnumerator.Current);
+                    whenStatement.runnerEvent.RegisterEvent((s, e) => HandleEvent(s, e, whenStatement));
+
+                    if (!this.activeEvents.Contains(whenStatement.runnerEvent))
+                    {
+                        this.activeEvents.Add(whenStatement.runnerEvent);
+                    }
                 }
             }
-            catch(MSWRuntimeException e)
+            
+            this.statementEnumerator.Reset();
+        }
+
+        public void RunScriptCleanup()
+        {
+            // iterate through events and clear invocation list
+            foreach (RunnerEvent runnerEvent in this.activeEvents)
             {
-                ReportRuntimeError?.Invoke(e);
+                runnerEvent.ClearAllEvents();
+            }
+            
+            this.statementEnumerator?.Dispose();
+            this.statementEnumerator = null;
+        }
+        
+        private void HandleEvent(object sender, RunnerEventArgs eventArgs, When visitor)
+        {
+            // When receiving this event,
+            // if the arguments are the same as the passed arguments,
+            // then execute the body
+            
+            // Convert the expression arguments.
+            var arguments = new object[visitor.arguments.Count];
+            for (int i = 0; i < visitor.arguments.Count(); i++)
+            {
+                arguments[i] = this.Evaluate(visitor.arguments[i]);
             }
 
-            return "Failed to run interpretation.";
+            if (arguments.Length != eventArgs.args.Count)
+            {
+                return;
+            }
+            
+            // get the event handler arguments
+            for (int i = 0; i < visitor.arguments.Count(); i++)
+            {
+                if (!arguments[i].Equals(eventArgs.args[i]))
+                {
+                    return;
+                }
+            }
+            
+            // if the event arguments match up, run the body.
+            this.Execute(visitor.body);
         }
 
         public void RunUntilBreak()
@@ -61,7 +108,7 @@ namespace MSW.Scripting
             }
         }
 
-        public bool InterpretNextLine()
+        private bool InterpretNextLine()
         {
             if (this.PauseEvent != null)
             {
@@ -99,7 +146,7 @@ namespace MSW.Scripting
             }
         }
 
-        private void HandlePauseEvent()
+        private void HandlePauseEvent(object sender, EventArgs eventArgs)
         {
             this.PauseEvent?.UnregisterEvent(HandlePauseEvent);
             this.PauseEvent = null;
@@ -377,6 +424,13 @@ namespace MSW.Scripting
 
             return null;
         }
+
+        public object VisitWhenBlock(When visitor)
+        {
+            // These shouldn't be visited in standard execution.
+            return null;
+        }
+
         #endregion
     }
 }

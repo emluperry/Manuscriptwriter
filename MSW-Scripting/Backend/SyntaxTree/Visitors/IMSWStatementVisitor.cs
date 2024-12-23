@@ -12,5 +12,7 @@
         object VisitIfBlock(If visitor);
 
         object VisitWhileBlock(While visitor);
+
+        object VisitWhenBlock(When visitor);
     }
 }

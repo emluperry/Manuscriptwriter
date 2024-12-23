@@ -5,6 +5,8 @@ namespace MSW.Console
 {
     public class ConsoleDialogue
     {
+        [MSWEvent("{0} speaks with {1}")] public RunnerEvent inputEvent;
+        
         public RunnerEvent consoleEvent;
         
         [MSWFunction("{0}: {1}")]

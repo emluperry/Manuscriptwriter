@@ -1,56 +1,50 @@
+using System;
 using UnityEngine;
 using UnityEngine.Search;
 
 using MSW.Compiler;
+using Object = UnityEngine.Object;
+
 namespace MSW.Unity
 {
     public class Storyteller : MonoBehaviour
     {
         [SerializeField] private MSWUnityLibrary[] libraries;
         private Compiler.Compiler compiler;
-        //private void Awake()
-        //{
-        //    this.RegisterSceneObjects();
-        //}
-
-        //private void RegisterSceneObjects()
-        //{
-        //    // Get all Action components within the scene.
-        //    var actionComponents = Object.FindObjectsByType<Actions>(FindObjectsSortMode.None);
-
-        //    foreach (var actionComponent in actionComponents)
-        //    {
-        //        actionComponent.RunScript = this.RunScript;
-        //    }
-        //}
-
-        //private void RunScript(string script)
-        //{
-            
-        //}
-
-        // DEBUG !!!
-        [SerializeField]
-        [SearchContext("ext:txt dir:Resources")] // QOL: Limit the files to ONLY project text files within Resources. 
-        private TextAsset testScript;
-
         private Runner runner;
-
-        private void Start()
+        
+        private void Awake()
         {
-            if(!testScript)
-            {
-                return;
-            }
-
             compiler = new Compiler.Compiler()
             {
                 ErrorLogger = Logger,
                 FunctionLibrary = libraries,
             };
-            var script = compiler.Compile(testScript.text);
+            
+            this.RegisterSceneObjects();
+        }
 
-            runner = new Runner(script)
+        private void OnDestroy()
+        {
+            this.CleanupOnFinish();
+        }
+
+        private void RegisterSceneObjects()
+        {
+            // Get all Action components within the scene.
+            var actionComponents = Object.FindObjectsByType<Actions>(FindObjectsSortMode.None);
+
+            foreach (var actionComponent in actionComponents)
+            {
+                actionComponent.RunScript = this.RunScript;
+            }
+        }
+
+        private void RunScript(string script)
+        {
+            var manuscript = compiler.Compile(script);
+
+            runner = new Runner(manuscript)
             {
                 Logger = Logger,
                 OnFinish = CleanupOnFinish,
@@ -58,12 +52,7 @@ namespace MSW.Unity
             
             runner.Run();
         }
-
-        private void Logger(string message)
-        {
-            Debug.LogError(message); 
-        }
-
+        
         private void CleanupOnFinish()
         {
             foreach (var library in this.libraries)
@@ -71,5 +60,28 @@ namespace MSW.Unity
                 library.Cleanup();
             }
         }
+
+        #region DEBUGGING
+
+        [SerializeField]
+        [SearchContext("ext:txt dir:Resources")] // QOL: Limit the files to ONLY project text files within Resources. 
+        private TextAsset testScript;
+
+        private void Start()
+        {
+            if(!testScript)
+            {
+                return;
+            }
+            
+            this.RunScript(testScript.text);
+        }
+
+        private void Logger(string message)
+        {
+            Debug.LogError(message); 
+        }
+
+        #endregion
     }
 }

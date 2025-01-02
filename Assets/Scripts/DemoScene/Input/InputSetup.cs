@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,12 +9,22 @@ namespace Demo.Input
     {
         private IEnumerable<IInput> inputComponents;
         
-        public virtual void SetupInput(InputSystem_Actions inputs)
+        public virtual void SetupInput(InputSystem_Actions inputs, Action<string> switchActionMap)
         {
             inputComponents = this.GetComponents<IInput>();
             foreach (var inputComp in inputComponents)
             {
+                inputComp.SwitchControlMap += switchActionMap;
                 inputComp.SetupInput(inputs);
+            }
+        }
+
+        public virtual void DestroyInput(Action<string> switchActionMap)
+        {
+            this.DisableInput();
+            foreach (var inputComp in inputComponents)
+            {
+                inputComp.SwitchControlMap -= switchActionMap;
             }
         }
 

@@ -1,6 +1,6 @@
 {
-    "name": "MSW-EventSystem",
-    "rootNamespace": "MSW.EventSystem",
+    "name": "MSW-Unity-Events",
+    "rootNamespace": "MSW.Unity.Events",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

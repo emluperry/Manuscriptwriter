@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using MSW.Compiler;
-using MSW.Reflection;
 using MSW.Scripting;
+using MSW.Events;
 
 namespace MSW.Console
 {
@@ -48,10 +47,10 @@ namespace MSW.Console
             while (!runner.IsFinished())
             {
                 System.Console.ReadLine();
-                dialogue.consoleEvent.FireEvent(null);
+                dialogue.consoleEvent.FireEvent(null, null);
             }
             
-            dialogue.inputEvent.FireEvent(new RunnerEventArgs(new List<object>() { "the player", "me"}));
+            dialogue.inputEvent.FireEvent(null, new RunnerEventArgs(new List<object>() { "the player", "me"}));
         }
     }
 }

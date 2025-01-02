@@ -1,5 +1,5 @@
-﻿using System;
-using MSW.Reflection;
+﻿using MSW.Reflection;
+using MSW.Events;
 
 namespace MSW.Console
 {

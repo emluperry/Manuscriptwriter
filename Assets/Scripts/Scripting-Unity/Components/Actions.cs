@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Search;
 
-namespace MSW.Scripting.Unity
+namespace MSW.Unity
 {
     public class Actions : MonoBehaviour
     {
@@ -10,5 +10,10 @@ namespace MSW.Scripting.Unity
         private TextAsset actionScript;
 
         public Action<string> RunScript;
+
+        public void RunActionScript()
+        {
+            this.RunScript?.Invoke(actionScript.text);
+        }
     }
 }

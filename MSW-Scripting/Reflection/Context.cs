@@ -1,12 +1,13 @@
 using System;
+using MSW.Events;
 
 namespace MSW.Reflection
 {
     public class Context
     {
-        internal RunnerEvent pauseEvent = null;
+        internal IRunnerEvent pauseEvent = null;
 
-        public void WaitForEvent(RunnerEvent eventHandler)
+        public void WaitForEvent(IRunnerEvent eventHandler)
         {
             this.pauseEvent = eventHandler;
         }

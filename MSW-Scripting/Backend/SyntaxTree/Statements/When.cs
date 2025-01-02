@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using MSW.Reflection;
+using MSW.Events;
 
 namespace MSW.Scripting
 {
     internal class When : Statement
     {
-        public readonly RunnerEvent runnerEvent;
+        public readonly IRunnerEvent runnerEvent;
         public readonly Statement body;
         public readonly List<Expression> arguments;
         
-        public When(RunnerEvent runnerEvent, Statement body, List<Expression> arguments)
+        public When(IRunnerEvent runnerEvent, Statement body, List<Expression> arguments)
         {
             this.runnerEvent = runnerEvent;
             this.body = body;

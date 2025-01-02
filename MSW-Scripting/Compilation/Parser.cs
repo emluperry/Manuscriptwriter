@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using MSW.Reflection;
 using MSW.Scripting;
+using MSW.Events;
 
 namespace MSW.Compiler
 {
@@ -26,9 +27,9 @@ namespace MSW.Compiler
         private struct CustomEvent
         {
             public MSWEventAttribute attribute;
-            public RunnerEvent runnerEvent;
+            public IRunnerEvent runnerEvent;
 
-            public CustomEvent(MSWEventAttribute attribute, RunnerEvent runnerEvent)
+            public CustomEvent(MSWEventAttribute attribute, IRunnerEvent runnerEvent)
             {
                 this.attribute = attribute;
                 this.runnerEvent = runnerEvent;
@@ -81,7 +82,7 @@ namespace MSW.Compiler
                     var attributes = method.GetCustomAttributes<MSWEventAttribute>();
                     var field = method.GetValue(lib);
 
-                    if (!(field is RunnerEvent runnerEvent))
+                    if (!(field is IRunnerEvent runnerEvent))
                     {
                         continue;
                     }
@@ -113,7 +114,7 @@ namespace MSW.Compiler
             return null;
         }
     
-        private RunnerEvent GetEventFromLine(string line, out List<string> inputs)
+        private IRunnerEvent GetEventFromLine(string line, out List<string> inputs)
         {
             foreach (var runnerEvent in this.events)
             {
@@ -356,7 +357,7 @@ namespace MSW.Compiler
                 throw this.ParseError(eventToken, "When must be followed by an event!");
             }
             
-            RunnerEvent runnerEvent = this.GetEventFromLine(eventToken.lexeme, out List<string> arguments);
+            IRunnerEvent runnerEvent = this.GetEventFromLine(eventToken.lexeme, out List<string> arguments);
 
             if (runnerEvent == null)
             {

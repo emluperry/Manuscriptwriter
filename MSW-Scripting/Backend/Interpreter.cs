@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MSW.Reflection;
-using MSW.Scripting.NativeFunctions;
+using MSW.Events;
 
 namespace MSW.Scripting
 {
     internal class Interpreter : IMSWExpressionVisitor, IMSWStatementVisitor
     {
         // Context Settings
-        private RunnerEvent PauseEvent = null;
+        private IRunnerEvent PauseEvent = null;
         
         internal bool IsFinished { get; private set; }
         internal Action OnFinish;
@@ -21,7 +21,7 @@ namespace MSW.Scripting
         private Environment environment;
 
         private IEnumerator<Statement> statementEnumerator;
-        private List<RunnerEvent> activeEvents = new List<RunnerEvent>();
+        private List<IRunnerEvent> activeEvents = new List<IRunnerEvent>();
 
         public Interpreter(Manuscript manuscript)
         {
@@ -59,7 +59,7 @@ namespace MSW.Scripting
         public void RunScriptCleanup()
         {
             // iterate through events and clear invocation list
-            foreach (RunnerEvent runnerEvent in this.activeEvents)
+            foreach (IRunnerEvent runnerEvent in this.activeEvents)
             {
                 runnerEvent.ClearAllEvents();
             }
@@ -68,7 +68,7 @@ namespace MSW.Scripting
             this.statementEnumerator = null;
         }
         
-        private void HandleEvent(object sender, RunnerEventArgs eventArgs, When visitor)
+        private void HandleEvent(object sender, IRunnerEventArgs eventArgs, When visitor)
         {
             // When receiving this event,
             // if the arguments are the same as the passed arguments,
@@ -80,8 +80,8 @@ namespace MSW.Scripting
             {
                 arguments[i] = this.Evaluate(visitor.arguments[i]);
             }
-
-            if (arguments.Length != eventArgs.args.Count)
+            
+            if (!eventArgs.HasValidArguments(arguments))
             {
                 return;
             }
@@ -89,7 +89,7 @@ namespace MSW.Scripting
             // get the event handler arguments
             for (int i = 0; i < visitor.arguments.Count(); i++)
             {
-                if (!arguments[i].Equals(eventArgs.args[i]))
+                if (!arguments[i].Equals(eventArgs.Args[i]))
                 {
                     return;
                 }
@@ -146,7 +146,7 @@ namespace MSW.Scripting
             }
         }
 
-        private void HandlePauseEvent(object sender, EventArgs eventArgs)
+        private void HandlePauseEvent(object sender, IRunnerEventArgs eventArgs)
         {
             this.PauseEvent?.UnregisterEvent(HandlePauseEvent);
             this.PauseEvent = null;

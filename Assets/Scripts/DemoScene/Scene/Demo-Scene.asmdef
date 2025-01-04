@@ -1,0 +1,18 @@
+{
+    "name": "Demo-Scene",
+    "rootNamespace": "Demo.Scene",
+    "references": [
+        "GUID:5cbdcdaa5b9b8404fa3da8d639c4a6a7",
+        "GUID:99ba68c3d0b81c641924929f20dd6865",
+        "GUID:29452e9eddf400f458fb5931a06f2fb4"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -84,8 +84,11 @@ namespace MSW.Unity.Dialogue
 
         public override void Cleanup()
         {
-            canvas?.gameObject?.SetActive(false);
-            this.SwitchControlMap?.Invoke("Player");
+            if (canvas != null)
+            {
+                canvas?.gameObject?.SetActive(false);
+                this.SwitchControlMap?.Invoke("Player");
+            }
         }
     }
 }

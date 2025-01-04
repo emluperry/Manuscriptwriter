@@ -29,6 +29,11 @@ namespace Demo.Input
 
         private void SwitchActionMap(string name)
         {
+            if (inputActions == null)
+            {
+                return;
+            }
+            
             switch (name)
             {
                 case "Player":
@@ -42,9 +47,14 @@ namespace Demo.Input
 
         public void ChangeCurrentActionMap(InputActionMap newMap)
         {
-            this.playerInput.currentActionMap.Disable();
+            if (this.player == null)
+            {
+                return;
+            }
+            
+            this.playerInput.currentActionMap?.Disable();
             this.playerInput.currentActionMap = newMap;
-            this.playerInput.currentActionMap.Enable();
+            this.playerInput.currentActionMap?.Enable();
         }
 
         private void OnDestroy()

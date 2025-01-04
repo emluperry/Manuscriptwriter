@@ -1,13 +1,9 @@
 {
-    "name": "Demo-Player",
-    "rootNamespace": "Demo.Player",
+    "name": "Demo-Interaction",
+    "rootNamespace": "Demo.Interaction",
     "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:9dfc29c3bbd2ee844a9ccd296fc26188",
-        "GUID:99e218a9cf2639b4d95d86b2f82d4ca7",
         "GUID:883789f1c68973c4e95b13f66521fb2c",
-        "GUID:5cbdcdaa5b9b8404fa3da8d639c4a6a7",
-        "GUID:8b9c6cc47c66d2e489d4565544ed87aa"
+        "GUID:5cbdcdaa5b9b8404fa3da8d639c4a6a7"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

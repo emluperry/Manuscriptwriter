@@ -2,17 +2,17 @@
 {
     internal interface IMSWStatementVisitor
     {
-        object VisitExpression(StatementExpression visitor);
-        object VisitPrint(Print visitor);
+        bool VisitExpression(StatementExpression visitor);
+        bool VisitPrint(Print visitor);
 
-        object VisitVar(VarDeclaration visitor);
+        bool VisitVar(VarDeclaration visitor);
 
-        object VisitBlock(Block visitor);
+        bool VisitBlock(Block visitor);
 
-        object VisitIfBlock(If visitor);
+        bool VisitIfBlock(If visitor);
 
-        object VisitWhileBlock(While visitor);
+        bool VisitWhileBlock(While visitor);
 
-        object VisitWhenBlock(When visitor);
+        bool VisitWhenBlock(When visitor);
     }
 }

@@ -9,7 +9,7 @@
             this.expression = expression;
         }
 
-        public override object Accept(IMSWStatementVisitor visitor)
+        public override bool Accept(IMSWStatementVisitor visitor)
         {
             return visitor.VisitPrint(this);
         }

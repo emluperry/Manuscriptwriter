@@ -15,7 +15,6 @@ namespace Demo.Player
     public class PlayerInteraction : MonoBehaviour, IInput
     {
         private InputAction testInteraction;
-        [SerializeField] private UnityMSWEvent interactionEvent;
         
         private CollisionHandler collisionHandler;
         private InteractableObject target;
@@ -75,7 +74,7 @@ namespace Demo.Player
         private void HandleInteraction(InputAction.CallbackContext obj)
         {
             //this.interactionEvent.FireEvent(this, new RunnerEventArgs(new List<object>() {"the player", "me"}));
-            this.target.StartInteract();
+            this.target.StartInteract("the player");
         }
     }
 }

@@ -11,7 +11,7 @@
             this.initialiser = initialiser;
         }
 
-        public override object Accept(IMSWStatementVisitor visitor)
+        public override bool Accept(IMSWStatementVisitor visitor)
         {
             return visitor.VisitVar(this);
         }

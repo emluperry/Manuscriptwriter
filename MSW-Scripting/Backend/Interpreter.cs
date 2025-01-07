@@ -17,43 +17,20 @@ namespace MSW.Scripting
         // Error reporting
         public Action<MSWRuntimeException> ReportRuntimeError;
         
-        private Environment globals;
-        private Environment environment;
-
-        private IEnumerator<Statement> statementEnumerator;
+        private Stack<Environment> environmentStack;
+        private Environment environment => this.environmentStack.Peek();
+        
         private List<IRunnerEvent> activeEvents = new List<IRunnerEvent>();
 
         public Interpreter(Manuscript manuscript)
         {
-            this.globals = new Environment();
-            this.environment = globals;
-            
-            this.statementEnumerator = manuscript.statements.GetEnumerator();
-            
-            this.RunScriptSetup();
+            this.environmentStack = new Stack<Environment>();
+            this.environmentStack.Push(new Environment(manuscript.statements));
         }
 
         ~Interpreter()
         {
             this.RunScriptCleanup();
-        }
-
-        private void RunScriptSetup()
-        {
-            while (this.statementEnumerator.MoveNext())
-            {
-                if (this.statementEnumerator.Current is When whenStatement)
-                {
-                    whenStatement.runnerEvent.RegisterEvent((s, e) => HandleEvent(s, e, whenStatement));
-
-                    if (!this.activeEvents.Contains(whenStatement.runnerEvent))
-                    {
-                        this.activeEvents.Add(whenStatement.runnerEvent);
-                    }
-                }
-            }
-            
-            this.statementEnumerator.Reset();
         }
 
         public void RunScriptCleanup()
@@ -63,9 +40,12 @@ namespace MSW.Scripting
             {
                 runnerEvent.ClearAllEvents();
             }
-            
-            this.statementEnumerator?.Dispose();
-            this.statementEnumerator = null;
+
+            while (environmentStack.Any())
+            {
+                var env = environmentStack.Pop();
+                env.Dispose();
+            }
         }
         
         private void HandleEvent(object sender, IRunnerEventArgs eventArgs, When visitor)
@@ -97,6 +77,7 @@ namespace MSW.Scripting
             
             // if the event arguments match up, run the body.
             this.Execute(visitor.body);
+            this.RunUntilBreak();
         }
 
         public void RunUntilBreak()
@@ -117,17 +98,35 @@ namespace MSW.Scripting
             
             try
             {
-                if (this.statementEnumerator.MoveNext())
+                if (this.environmentStack.Any())
                 {
-                    this.Execute(this.statementEnumerator.Current);
+                    var currentEnv = this.environmentStack.Peek();
+                    while (currentEnv.IsEmpty())
+                    {
+                        this.environmentStack.Pop();
+
+                        if (!this.environmentStack.Any())
+                        {
+                            this.IsFinished = true;
+                            this.OnFinish?.Invoke();
+                            return false;
+                        }
+                        
+                        currentEnv = this.environmentStack.Peek();
+                    }
+                    
+                    bool finishedExecution = this.Execute(currentEnv.Peek());
+                    if (finishedExecution)
+                    {
+                        currentEnv.Dequeue();
+                    }
+                    
                     return this.PauseEvent == null;
                 }
-                else
-                {
-                    this.IsFinished = true;
-                    this.OnFinish?.Invoke();
-                    return false;
-                }
+
+                this.IsFinished = true;
+                this.OnFinish?.Invoke();
+                return false;
             }
             catch (MSWRuntimeException e)
             {
@@ -159,28 +158,14 @@ namespace MSW.Scripting
             return expr.Accept(this);
         }
 
-        private object Execute(Statement statement)
+        private bool Execute(Statement statement)
         {
             return statement.Accept(this);
         }
 
-        private void ExecuteBlock(IEnumerable<Statement> statements, Environment blockEnvironment)
+        private void ExecuteBlock(Environment blockEnvironment)
         {
-            Environment previous = this.environment;
-
-            try
-            {
-                this.environment = blockEnvironment;
-
-                foreach(Statement statement in statements)
-                {
-                    this.Execute(statement);
-                }
-            }
-            finally
-            {
-                this.environment = previous;
-            }
+            this.environmentStack.Push(blockEnvironment);
         }
 
         private bool IsTrue(object obj)
@@ -370,20 +355,20 @@ namespace MSW.Scripting
         #endregion
 
         #region STATEMENT VISITORS
-        public object VisitExpression(StatementExpression visitor)
+        public bool VisitExpression(StatementExpression visitor)
         {
             this.Evaluate(visitor.expression);
-            return null;
+            return true;
         }
 
-        public object VisitPrint(Print visitor)
+        public bool VisitPrint(Print visitor)
         {
             object value = this.Evaluate(visitor.expression);
             Console.WriteLine(value != null ? value.ToString() : "Null");
-            return null;
+            return true;
         }
 
-        public object VisitVar(VarDeclaration visitor)
+        public bool VisitVar(VarDeclaration visitor)
         {
             object value = null;
             if(visitor.initialiser != null)
@@ -392,16 +377,24 @@ namespace MSW.Scripting
             }
 
             environment.Define(visitor.token.lexeme, value);
-            return null;
+            return true;
         }
 
-        public object VisitBlock(Block visitor)
+        public bool VisitBlock(Block visitor)
         {
-            this.ExecuteBlock(visitor.statements, new Environment(environment));
-            return null;
+            if (this.environmentStack.Any())
+            {
+                this.ExecuteBlock(new Environment(visitor.statements, this.environmentStack.Peek()));
+            }
+            else
+            {
+                this.ExecuteBlock(new Environment(visitor.statements));
+            }
+            
+            return true;
         }
 
-        public object VisitIfBlock(If visitor)
+        public bool VisitIfBlock(If visitor)
         {
             if(this.IsTrue(this.Evaluate(visitor.condition)))
             {
@@ -412,23 +405,30 @@ namespace MSW.Scripting
                 this.Execute(visitor.elseBranch);
             }
 
-            return null;
+            return true;
         }
 
-        public object VisitWhileBlock(While visitor)
+        public bool VisitWhileBlock(While visitor)
         {
-            while(this.IsTrue(this.Evaluate(visitor.condition)))
+            if(this.IsTrue(this.Evaluate(visitor.condition)))
             {
                 this.Execute(visitor.statement);
+                return false;
             }
 
-            return null;
+            return true;
         }
 
-        public object VisitWhenBlock(When visitor)
+        public bool VisitWhenBlock(When visitor)
         {
-            // These shouldn't be visited in standard execution.
-            return null;
+            visitor.runnerEvent.RegisterEvent((s, e) => HandleEvent(s, e, visitor));
+
+            if (!this.activeEvents.Contains(visitor.runnerEvent))
+            {
+                this.activeEvents.Add(visitor.runnerEvent);
+            }
+
+            return true;
         }
 
         #endregion

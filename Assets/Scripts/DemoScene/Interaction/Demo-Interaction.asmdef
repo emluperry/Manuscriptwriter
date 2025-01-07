@@ -3,7 +3,8 @@
     "rootNamespace": "Demo.Interaction",
     "references": [
         "GUID:883789f1c68973c4e95b13f66521fb2c",
-        "GUID:5cbdcdaa5b9b8404fa3da8d639c4a6a7"
+        "GUID:5cbdcdaa5b9b8404fa3da8d639c4a6a7",
+        "GUID:99e218a9cf2639b4d95d86b2f82d4ca7"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -196,6 +196,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionIcon: {fileID: 11400000, guid: 8a6d465494866e047b840404c1c45f25, type: 2}
   iconRenderer: {fileID: 3961282151206054560}
+  OnInteract: {fileID: 11400000, guid: 13b67ef4c122d2648a1658ff6ef42703, type: 2}
 --- !u!114 &4161803580467368168
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -51,6 +51,7 @@ namespace MSW.Console
             }
             
             dialogue.inputEvent.FireEvent(null, new RunnerEventArgs(new List<object>() { "the player", "me"}));
+            dialogue.inputEvent.FireEvent(null, new RunnerEventArgs(new List<object>() { "the player", "Cat"}));
         }
     }
 }

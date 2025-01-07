@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace MSW.Scripting
 {
@@ -7,16 +8,35 @@ namespace MSW.Scripting
         private readonly Dictionary<string, object> variables = new Dictionary<string, object>();
         private readonly Environment enclosing;
 
-        public Environment()
+        private Queue<Statement> statementQueue;
+        
+        public Statement Peek() => statementQueue?.Peek();
+        public Statement Dequeue() => statementQueue?.Dequeue();
+        
+        public Environment(IEnumerable<Statement> statements)
         {
             enclosing = null;
+            statementQueue = new Queue<Statement>(statements);
         }
 
-        public Environment(Environment enclosing)
+        public Environment(IEnumerable<Statement> statements, Environment enclosing)
         {
             this.enclosing = enclosing;
+            statementQueue = new Queue<Statement>(statements);
         }
 
+        public bool IsEmpty()
+        {
+            return !this.statementQueue.Any();
+        }
+
+        public void Dispose()
+        {
+            this.statementQueue?.Clear();
+            this.statementQueue = null;
+        }
+
+        #region VARIABLES
         public void Define(string name, object value)
         {
             variables[name] = value;
@@ -68,5 +88,6 @@ namespace MSW.Scripting
 
             throw new MSWRuntimeException(token, $"Undefined variable {token.lexeme}.");
         }
+        #endregion
     }
 }

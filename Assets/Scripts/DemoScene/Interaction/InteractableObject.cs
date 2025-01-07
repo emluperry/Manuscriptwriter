@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using MSW.Events;
+using MSW.Unity.Events;
 using UnityEngine;
 
 namespace Demo.Interaction
@@ -9,7 +12,7 @@ namespace Demo.Interaction
         [SerializeField] private InteractionIcon interactionIcon;
         [SerializeField] private SpriteRenderer iconRenderer;
 
-        public Action OnInteract;
+        [SerializeField] private UnityMSWEvent OnInteract;
 
         protected virtual void Awake()
         {
@@ -17,10 +20,12 @@ namespace Demo.Interaction
             iconRenderer.enabled = false;
         }
         
-        public virtual void StartInteract()
+        public virtual void StartInteract(string interactor)
         {
             Debug.Log($"Interacted with {this.gameObject.name}.");
-            this.OnInteract?.Invoke();
+            
+            // This isn't perfect, but works for now.
+            OnInteract?.FireEvent(this, new RunnerEventArgs(new List<object>() {interactor, this.gameObject.name}));
         }
 
         public virtual void OnOverlap()

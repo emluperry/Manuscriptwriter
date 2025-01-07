@@ -460,8 +460,6 @@ namespace MSW.Compiler
                 
                 statements.Add(this.Declaration());
             }
-            
-            this.ConsumeOneOfTokens(new List<TokenType> { TokenType.EOL, TokenType.EOF, TokenType.WHEN, TokenType.PASSAGE }, "Expect end of line after value.");
             return statements;
         }
 

@@ -11,7 +11,7 @@
             this.statement = statement;
         }
 
-        public override object Accept(IMSWStatementVisitor visitor)
+        public override bool Accept(IMSWStatementVisitor visitor)
         {
             return visitor.VisitWhileBlock(this);
         }

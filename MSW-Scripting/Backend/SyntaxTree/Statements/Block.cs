@@ -10,7 +10,7 @@ namespace MSW.Scripting
             this.statements = statements;
         }
 
-        public override object Accept(IMSWStatementVisitor visitor)
+        public override bool Accept(IMSWStatementVisitor visitor)
         {
             return visitor.VisitBlock(this);
         }

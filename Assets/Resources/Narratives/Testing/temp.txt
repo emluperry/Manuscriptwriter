@@ -21,3 +21,7 @@ print strValue
 When the player speaks with me
 # Say "HELLO????????"
 Matt: Exterminate!
+Matt: The Daleks will exterminate!
+
+When the player speaks with Cat
+Cat: Meows.

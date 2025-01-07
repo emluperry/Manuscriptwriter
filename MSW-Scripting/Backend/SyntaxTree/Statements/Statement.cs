@@ -2,6 +2,6 @@
 {
     internal abstract class Statement
     {
-        public abstract object Accept(IMSWStatementVisitor visitor);
+        public abstract bool Accept(IMSWStatementVisitor visitor);
     }
 }
